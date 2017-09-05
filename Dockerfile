@@ -44,8 +44,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 USER www-data
 
-# Define mountable directories.
-VOLUME ['/gollum/wiki']
+# Define mountable directory
+VOLUME ['/gollum']
 
 EXPOSE 80
 EXPOSE 443
