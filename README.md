@@ -12,7 +12,7 @@ Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum) and [ngin
 
 `docker run schnatterer/gollum-galore -p 8080:80`
 
-* Serves gollum at localhost:8080, 
+* Serves gollum at `http://localhost:8080`, 
 * with HTTP basic auth user `test`, password `test `😲. 
 * The wiki data is stored in an anonymous volume.
 
@@ -20,7 +20,7 @@ Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum) and [ngin
 
 `docker run -p80:80 -v ~/on/your/host/gollum:/gollum/ -e GOLLUM_PARAMS="--allow-uploads --live-preview" schnatterer/gollum-galore`
 
-* Serves gollum at `localhost:8080`, 
+* Serves gollum at `http://localhost`, 
 * some of [gollum's command line options](https://github.com/gollum/gollum#configuration) are set
 * with an HTTP basic auth file that you provide at `/on/your/host/gollum/config/.htpasswd`.  
 This can be created with `htpasswd -c /on/your/host/gollum/config/.htpasswd test` (where `test`) is the username, for example.
