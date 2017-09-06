@@ -39,6 +39,7 @@ RUN \
   && chmod -R a+w /var/log/nginx \
   /var/lib/nginx\ \
   /run \
+  /gollum \
 
   # Allow nginx to bind to port 80 as non-root
   && setcap CAP_NET_BIND_SERVICE=+eip $(which nginx)
