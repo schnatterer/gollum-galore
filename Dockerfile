@@ -37,7 +37,7 @@ RUN \
     /gollum \
   # Make logs world-writeable. On Openshift this won't run as user defined bellow...
   && chmod -R a+w /var/log/nginx \
-  /var/lib/nginx\ \
+  /var/lib/nginx \
   /run \
   /gollum \
 
