@@ -35,6 +35,9 @@ RUN \
     /run \
     /etc/nginx/nginx.conf \
     /gollum \
+  # Make logs world-writeable. On Openshift this won't run as user defined bellow...
+  && chmod -R a+w /var/log/nginx \
+  /var/lib/nginx\
 
   # Allow nginx to bind to port 80 as non-root
   && setcap CAP_NET_BIND_SERVICE=+eip $(which nginx)
