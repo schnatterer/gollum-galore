@@ -3,49 +3,47 @@ FROM ubuntu:16.04
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
-# e.g '--config /home/usr/gollum/config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/home/usr/gollum/config
-ENV GOLLUM_PARAMS=''
+# e.g.: -e GOLLUM_PARAMS=--config /gollum/config/gollum.ru", in addition to -v /FOLDER/ON/HOST:/gollum
+ENV GOLLUM_PARAMS=""
+#  e.g "--loglevel=DEBUG --configFile=/gollum/config/traefik.toml", in addition to -v /FOLDER/ON/HOST:/gollum
+ENV TRAEFIK_PARAMS="--loglevel=DEBUG"
 
-RUN \
-  apt-get update \
+# Those are for the build only
+ARG TRAEFIK_VERSION=v1.3.7
+
+# Install dependencies
+RUN apt-get update \
   && apt-get upgrade -y \
-  # Install a more recent version of nginx
-  #&& DEBIAN_FRONTEND=noninteractive apt-get install -y -q software-properties-common \
-  #&& add-apt-repository -y ppa:nginx/stable \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
-    nginx \
+    wget \
     # Depdencies needed for gollum on Ubuntu : https://github.com/gollum/gollum/wiki/Installation#ubuntu-150415101604
     ruby ruby-dev make zlib1g-dev libicu-dev build-essential git cmake \
   && apt-get clean \
-  && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*  \
-  # Install gollum
-  && gem install gollum github-markdown \
+  && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
-  # Initialize wiki data.
-  # Can be made persistent via -v /FOLDER/ON/HOST://wikidata. If so don't forget to call 'git init' in the path!
-  # BTW you can customize 'gollum's' git user using this command in this directory:
-  #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
-  && mkdir -p /gollum/wiki && mkdir -p /gollum/config && git init /gollum/wiki \
+# Install treafik
+RUN wget -q -P /usr/local/bin https://github.com/containous/traefik/releases/download/$TRAEFIK_VERSION/traefik_linux-amd64 \
+&& chmod +x /usr/local/bin/traefik_linux-amd64
 
-  # Create .htaccess file with default user test:test
-  && printf 'test:$apr1$CqvfQba.$Xl.YaOfb13AqbSCcmoECR/' > /gollum/config/.htpasswd \
+# Install gollum
+RUN gem install gollum github-markdown
 
-  # Authorize www-data user to the directories needed for running nginx and gollum
-  && chown -R www-data:www-data /var/lib/nginx \
-    /run \
-    /etc/nginx/nginx.conf \
-    /gollum \
+# Initialize wiki data.
+# Can be made persistent via -v /FOLDER/ON/HOST:/gollum. If so, don't forget to call "git init" in the path!
+RUN mkdir -p /gollum/wiki && git init /gollum/wiki
 
-  # Allow nginx to bind to port 80 as non-root
-  && setcap CAP_NET_BIND_SERVICE=+eip $(which nginx)
+# As we need to start two processes, create a startup script that starts one in the background  :-/
+RUN printf " \
+  (traefik_linux-amd64 --file.filename=/root/traefik-routes.toml $TRAEFIK_PARAMS)&  \n\
+  /usr/local/bin/gollum /gollum/wiki $GOLLUM_PARAMS" > /root/startup.sh \
+&& chmod +x /root/startup.sh
 
-# Config nginx as reverse proxy for gollum and to use basic auth
-COPY nginx.conf /etc/nginx/nginx.conf
-
-USER www-data
+# Create treafik route to gollum
+COPY traefik-routes.toml /root/traefik-routes.toml
 
 EXPOSE 80
 EXPOSE 443
 # Don't Expose gollum port 4567!
 
-ENTRYPOINT nginx && /usr/local/bin/gollum /gollum/wiki $GOLLUM_PARAMS
+# Start traefik and gollum
+ENTRYPOINT /root/startup.sh
