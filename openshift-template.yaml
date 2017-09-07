@@ -1,0 +1,108 @@
+# TODO This is only a first approach and not ready, yet. If needed accomplish by copying from openshift-descriptors.yaml
+apiVersion: v1
+kind: Template
+labels:
+  template: gollum-galore-template
+message: Welcome to gollum-gallore. See https://github.com/schnatterer/gollum-galore
+metadata:
+  annotations:
+    description: See https://github.com/schnatterer/gollum-galore
+    iconClass: icon-ruby
+    openshift.io/display-name: gollum-galore
+    tags: wiki
+    template.openshift.io/documentation-url: https://github.com/schnatterer/gollum-galore
+    template.openshift.io/long-description: This template provides a gollum wiki with lots of sugar
+    template.openshift.io/provider-display-name: Johannes Schnatterer
+    template.openshift.io/support-url: https://github.com/schnatterer/gollum-galore/issues
+  name: gollum-galore
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: "${SERVICE_NAME}"
+  spec:
+    ports:
+    - name: http
+      port: 80
+    - name: https
+      port: 443
+    selector:
+      name: "${SERVICE_NAME}"
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: "${SERVICE_NAME}"
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: 'true'
+    name: "${SERVICE_NAME}"
+  spec:
+    replicas: 1
+    selector:
+      name: "${SERVICE_NAME}"
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: "${SERVICE_NAME}"
+      spec:
+        containers:
+        - name: gollum-galore
+          image: schnatterer/gollum-galore:${GOLLUM_GALORE_VERSION}
+          env:
+          - name: GOLLUM_PARAMS
+            value: --allow-uploads --live-preview
+          readinessProbe:
+            httpGet:
+              path: /Home
+              port: 80
+            initialDelaySeconds: 1
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /Home
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: "${MEMORY_LIMIT}"
+          securityContext:
+            privileged: false
+          volumeMounts:
+          - mountPath: "/gollum"
+            name: "${SERVICE_NAME}-data"
+        volumes:
+        - name: "${SERVICE_NAME}-data"
+          persistentVolumeClaim:
+            claimName: "${SERVICE_NAME}"
+parameters:
+- description: Maximum amount of memory the container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The name of the OpenShift Service exposed for the gollum galore.
+  displayName: Service Name
+  name: SERVICE_NAME
+  required: true
+  value: gollum-galore
+- description: Volume space available for data, e.g. 512Mi, 2Gi.
+  displayName: Volume Capacity
+  name: VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- description: Version of gollum-galore image to be used
+  displayName: Version of gollum-galore Image
+  name: GOLLUM_GALORE_VERSION
+  required: true
+  value: '0.1.3'
