@@ -5,6 +5,7 @@ MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
 # e.g '--config /home/usr/gollum/config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/home/usr/gollum/config
 ENV GOLLUM_PARAMS=''
+ENV CADDY_PARAMS=''
 ENV HOST='localhost'
 
 RUN \
