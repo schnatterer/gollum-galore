@@ -37,6 +37,10 @@ If you want to deploy it, all you got to do is
 ```
 oc new-project gollum-galore
 kubectl apply -f openshift-descriptors.yaml
+
+# For now you'll have to init the repo manually
+kubectl exec -it gollum-galore-0 bash
+git init /gollum/wiki/
 ```
 
 Sidenote: There also is a [(discontinued) first version of an openshift template](https://github.com/schnatterer/gollum-galore/blob/59cae8ca93d127bed8efbe22d04c6b32860400dd/openshift-template.yaml).
