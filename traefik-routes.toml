@@ -7,4 +7,4 @@ backend = "backend1"
 [backends]
 [backends.backend1]
 [backends.backend1.servers.server1]
-url = "http://localhost:4567"
+url = "http://localhost:4567/"
