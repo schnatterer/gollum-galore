@@ -1,56 +1,61 @@
-FROM ubuntu:16.04
+FROM ruby:2.4.1-alpine
 
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
 # e.g '--config /home/usr/gollum/config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/home/usr/gollum/config
 ENV GOLLUM_PARAMS=''
+ENV HOST='localhost'
 
 RUN \
-  apt-get update \
-  && apt-get upgrade -y \
-  # Install a more recent version of nginx
-  #&& DEBIAN_FRONTEND=noninteractive apt-get install -y -q software-properties-common \
-  #&& add-apt-repository -y ppa:nginx/stable \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
-    nginx \
-    # Depdencies needed for gollum on Ubuntu : https://github.com/gollum/gollum/wiki/Installation#ubuntu-150415101604
-    ruby ruby-dev make zlib1g-dev libicu-dev build-essential git cmake \
-  && apt-get clean \
-  && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*  \
+  apk --update add \
+  # Need for gem install TODO move to docker.build?
+  alpine-sdk icu-dev \
+  # Needed for running gollum
+  git \
+
   # Install gollum
-  && gem install gollum github-markdown \
+  && gem install gollum  \
+
+    # cleanup apk cache
+  && rm -rf /var/cache/apk/* \
+
+  # Install caddy
+  && curl https://caddyserver.com/download/linux/amd64 | tar -xz  -C /usr/local/bin/ caddy \
+  && chmod +x /usr/local/bin/caddy \
 
   # Initialize wiki data.
-  # Can be made persistent via -v /FOLDER/ON/HOST://wikidata. If so don't forget to call 'git init' in the path!
+  # Can be made persistent via -v /FOLDER/ON/HOST:/gollum/wikidata.
+  && mkdir -p /gollum/wiki && mkdir -p /gollum/config \
+
+  # Create caddyfile that can be mounted when running
+  && touch /gollum/config/Caddyfile \
+
+  # Create base folder for startup script.
+  && mkdir /app \
+  # Make dirs world-writeable. On Openshift this won't run as user defined bellow...
+  && chmod a+rw /app \
+  && chmod -R a+rw /gollum/wiki \
+
+  # Allow caddy to bind to port 80 as non-root
+  && setcap cap_net_bind_service=+ep $(which caddy) \
+
+  # As we need to start two processes, create a startup script that starts one in the background  :-/
+  # In addition, make sure there is git repo in the wiki folder
   # BTW you can customize 'gollum's' git user using this command in this directory:
   #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
-  && mkdir -p /gollum/wiki && mkdir -p /gollum/config && git init /gollum/wiki \
+  && printf " \
+  (git init /gollum/wiki)& \n\
+  (caddy -port 80 $CADDY_PARAMS)&  \n\
+  gollum /gollum/wiki $GOLLUM_PARAMS" > /startup.sh \
+  && chmod +rx /startup.sh
 
-  # Create .htaccess file with default user test:test
-  && printf 'test:$apr1$CqvfQba.$Xl.YaOfb13AqbSCcmoECR/' > /gollum/config/.htpasswd \
-
-  # Authorize www-data user to the directories needed for running nginx and gollum
-  && chown -R www-data:www-data /var/lib/nginx \
-    /run \
-    /etc/nginx/nginx.conf \
-    /gollum \
-  # Make logs world-writeable. On Openshift this won't run as user defined bellow...
-  && chmod -R a+w /var/log/nginx \
-  /var/lib/nginx \
-  /run \
-  /gollum \
-
-  # Allow nginx to bind to port 80 as non-root
-  && setcap CAP_NET_BIND_SERVICE=+eip $(which nginx)
-
-# Config nginx as reverse proxy for gollum and to use basic auth
-COPY nginx.conf /etc/nginx/nginx.conf
-
-USER www-data
+COPY Caddyfile /app
+WORKDIR  app
 
 EXPOSE 80
 EXPOSE 443
 # Don't Expose gollum port 4567!
 
-ENTRYPOINT nginx && /usr/local/bin/gollum /gollum/wiki $GOLLUM_PARAMS
+# Start caddy and gollum
+CMD /startup.sh
