@@ -6,7 +6,7 @@ MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 # e.g '--config /home/usr/gollum/config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/home/usr/gollum/config
 ENV GOLLUM_PARAMS=''
 ENV CADDY_PARAMS=''
-ENV HOST='localhost'
+ENV HOST=':80'
 
 RUN \
   apk --update add \
@@ -47,7 +47,7 @@ RUN \
   #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
   && printf " \
   (git init /gollum/wiki)& \n\
-  (caddy -port 80 $CADDY_PARAMS)&  \n\
+  (caddy $CADDY_PARAMS)& \n\
   gollum /gollum/wiki $GOLLUM_PARAMS" > /startup.sh \
   && chmod +rx /startup.sh
 
