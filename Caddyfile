@@ -6,5 +6,3 @@ proxy / localhost:4567 {
   # Avoid redirects from gollum to be forwarded to port 4567 in browser
   transparent
 }
-
-import /gollum/config/Caddyfile
