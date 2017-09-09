@@ -47,7 +47,7 @@ RUN \
   #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
   && printf " \
   (git init /gollum/wiki)& \n\
-  (caddy $CADDY_PARAMS)& \n\
+  (CADDYPATH=/app caddy $CADDY_PARAMS)& \n\
   gollum /gollum/wiki $GOLLUM_PARAMS" > /startup.sh \
   && chmod +rx /startup.sh
 
