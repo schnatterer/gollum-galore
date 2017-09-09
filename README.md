@@ -27,6 +27,7 @@ basicauth / test test
 
 * Serves gollum at `http://localhost`,
 * some of [gollum's command line options](https://github.com/gollum/gollum#configuration) are set
+* enables HTTP basic auth, allowing only user `test` password `test`
 *  The wiki data is stored in `~/gollum/wiki`.
 You can set the git author using `git config user.name 'John Doe' && git config user.email 'john@doe.org'` in this folder.
 
