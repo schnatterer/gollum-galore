@@ -15,6 +15,7 @@ data:
   Caddyfile: |
     import /app/Caddyfile
     basicauth / {$BASIC_AUTH_USERNAME} {$BASIC_AUTH_PASSWORD}
+    tls self_signed
 ---
 apiVersion: v1
 kind: Service
@@ -59,9 +60,7 @@ spec:
         image: schnatterer/gollum-galore:0.2.0
         ports:
         - containerPort: 80
-          name: http
         - containerPort: 443
-          name: https
         volumeMounts:
         - name: wiki
           mountPath: /gollum/wiki
@@ -73,13 +72,13 @@ spec:
         readinessProbe:
           # don't use http here, because all our resources are protected
           tcpSocket:
-            port: 80
+            port: 443
           # Wait for volume to get bound
           initialDelaySeconds: 20
           periodSeconds: 1
         livenessProbe:
           tcpSocket:
-            port: 80
+            port: 443
           initialDelaySeconds: 120
           periodSeconds: 10
         env:
@@ -88,7 +87,7 @@ spec:
         - name: CADDY_PARAMS
           value: -conf /gollum/config/Caddyfile -log stdout
         - name: HOST
-          value: "*:80"
+          value: yourdomain.com:443
         - name: BASIC_AUTH_USERNAME
           valueFrom:
             secretKeyRef:
@@ -109,6 +108,7 @@ spec:
 ---
 # Creates the following route: <route-name>[-<namespace>].<suffix>
 # You can query it like so: oc get route gollum-galore-generated
+# Create a CNAME record and point it to the URL created by this route
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -119,3 +119,23 @@ spec:
   to:
     kind: Service
     name: gollum-galore
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gollum-galore
+spec:
+  # Insert your hostname here
+  host: yourdomain.com
+  port:
+    targetPort: https
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: passthrough
+  to:
+    kind: Service
+    name: gollum-galore
+---
+# Allow unsecure HTTP only for acme challenge does not work. The passthrough route seems to always take precedence.
+  #host: yourdomain.com
+  #path: /.well-known

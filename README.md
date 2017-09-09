@@ -31,19 +31,73 @@ basicauth / test test
 *  The wiki data is stored in `~/gollum/wiki`.
 You can set the git author using `git config user.name 'John Doe' && git config user.email 'john@doe.org'` in this folder.
 
+## HTTPS
+
+The following makes Caddy challenge a certificate at letsencrypt.
+
+`docker run -p80:80 -e 443:443 -e HOST=yourdomain.com -e CADDY_PARAMS=" -agree -email=you@yourdomain.com -log stdout" -v ~/gollum:/gollum gollum-galore`
+
+This will of course only work if this is bound to yourdomain.com:80 and yourdomain:443.
+
+See also [Automatic HTTPS - Caddy](https://caddyserver.com/docs/automatic-https).
+
+On Openshift we have some other challenges to take. See bellow.
+
 # Running on Kubernetes (Openshift)
+
+## Simple setup
+
 You can run gollum-gallore easily on any Kubernetes cluster. It even runs on the [free starter plan of openshift v3](https://www.openshift.com/pricing/index.html).
 
-You can find all necessary descriptors in [openshift-descriptors.yaml](openshift-descriptors.yaml). Most of them are standard kubernetes except for the route, which will work only on openshift.
+You can find all necessary descriptors in [openshift-descriptors-http.yaml](openshift-descriptors-http.yaml). Most of them are standard kubernetes except for the route, which will work only on openshift.
 It also shows how to specify gollum params and activates basic auth for user `harry` and the password`sally` via a base64-encoded secret.
 
 If you want to deploy it, all you got to do is
 ```
 oc new-project gollum-galore
-kubectl apply -f openshift-descriptors.yaml
+kubectl apply -f openshift-descriptors-http.yaml
 ```
 
+You can query the URL of your route like so: ` oc get route gollum-galore-generated`.
+
+As soon as your pod is ready your gollum wiki will be served at this location.
+
+Note: This is HTTP only! If you're happy with the generated to domain, you can change the route to be `edge`. If you would like to use a custom domain, see bellow.
+
 Sidenote: There also is a [(discontinued) first version of an openshift template](https://github.com/schnatterer/gollum-galore/blob/59cae8ca93d127bed8efbe22d04c6b32860400dd/openshift-template.yaml).
+
+## HTTPS (Custom Domain)
+
+Unfortunately, no luck getting Letsencrypt running on openshift, yet.
+
+A promising setup would be
+
+* Leave the generated route from the simple setup in place and use it to create a CNAME record with your DNS provider.
+* Create another `passthrough` route to our `gollum-galore` service, which should be able to pass the `tls-sni-challenge`.
+* Use the following params to start caddy
+```yaml
+name: CADDY_PARAMS
+value: -log stdout -agree -disable-http-challenge -email=you@yourdomain.com
+```
+
+However, even though it's `passthrough`, openshift always returns its own certificate, leading to a failure in the `tls-sni-challenge`.
+
+The http-challenge is not possible, because with `passthrough` routes on openshift, it's only possible to either block traffic or redirect it to port 443.
+
+One option would be the `dns-challenge`. [Caddy supports a number of providers](https://caddyserver.com/docs/automatic-https#dns-challenge).
+
+If you not happen to be at one of those providers, you could can create an `edge` route an either create and upload your certificates manually or create this `edge` route without specifying any certificate files. Then openhshift ships its own certificate (this results in a warning in the browser)
+
+A finaly option is to use a self signed certifcate (this will also result in a warning in the browser).
+However, this setup at least proofs the concept: `yourdomain.com` delivered with a certificate created by Caddy.
+You can try this out by changing yourdomain.com in `openshift-descriptors-https-self-signed.yaml` and rolling it out to the cluster like so:
+`kubectl apply -f openshift-descriptors-https-self-signed.yaml`
+
+Don't forget
+* to create the DNS CNAME entry as described above,
+* If you're pod is already running, delete it to trigger a new deployment (our necessary, because we use a `StatefulSet` here):
+`kubectl delete pod gollum-galore-0`
+
 
 # Architecture decisions
 
