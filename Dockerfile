@@ -3,10 +3,16 @@ FROM ruby:2.4.1-alpine
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
-# e.g '--config /home/usr/gollum/config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/home/usr/gollum/config
+# e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
 ENV GOLLUM_PARAMS=''
+# e.g '-conf /gollum/config/Caddyfile', in addition to -v /FOLDER/ON/HOST:/gollum/config
 ENV CADDY_PARAMS=''
 ENV HOST=':80'
+
+# As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
+# BTW you can customize 'gollum's' git user using the following command in the (mounted) /gollum/wiki folder:
+#  git config user.name 'John Doe' && git config user.email 'john@doe.org'
+COPY startup.sh /startup.sh
 
 RUN \
   apk --update add \
@@ -40,16 +46,8 @@ RUN \
 
   # Allow caddy to bind to port 80 as non-root
   && setcap cap_net_bind_service=+ep $(which caddy) \
-
-  # As we need to start two processes, create a startup script that starts one in the background  :-/
-  # In addition, make sure there is git repo in the wiki folder
-  # BTW you can customize 'gollum's' git user using this command in this directory:
-  #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
-  && printf " \
-  (git init /gollum/wiki)& \n\
-  (CADDYPATH=/app caddy $CADDY_PARAMS)& \n\
-  gollum /gollum/wiki $GOLLUM_PARAMS" > /startup.sh \
   && chmod +rx /startup.sh
+
 
 COPY Caddyfile /app
 WORKDIR  app
