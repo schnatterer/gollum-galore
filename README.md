@@ -90,7 +90,7 @@ If you not happen to be at one of those providers, you could can create an `edge
 
 A finaly option is to use a self signed certifcate (this will also result in a warning in the browser).
 However, this setup at least proofs the concept: `yourdomain.com` delivered with a certificate created by Caddy.
-You can try this out by changing yourdomain.com in `openshift-descriptors-https-self-signed.yaml` and rolling it out to the cluster like so:
+You can try this out by changing yourdomain.com in [`openshift-descriptors-https-self-signed.yaml`](openshift-descriptors-https-self-signed.yaml) and rolling it out to the cluster like so:
 `kubectl apply -f openshift-descriptors-https-self-signed.yaml`
 
 Don't forget
@@ -101,7 +101,7 @@ Don't forget
 
 # Architecture decisions
 
-Why Caddy?
+## Why Caddy?
 * Almost no configuration necessary
 * Works as transparent proxy
 * Provides HTTS/Letsencrypt out of the box
@@ -109,3 +109,10 @@ Why Caddy?
 Evaluated Alternatives
 * Traefik: Easy config, also for Letsencrypt, but didn't work as transparent proxy. Gollums 302 redirects lead to forward to port 4567 in browser, which is not exposed by container (by design!) See [Traefik proof of concept](https://github.com/schnatterer/gollum-galore/tree/traefik)
 * NGINX: Worked as transparent proxy but letsencrypt required installing a seperate cron proxy. Lots of effort and larger docker image. See [NGINX proof of concept](https://github.com/schnatterer/gollum-galore/tree/nginx)
+
+
+## Why two processes in one Container?
+* Gollum wiki is not indended to handle features such as HTTPS and auth -> We need a reverse proxy for that.
+* It's just easier to ship this as one artifact.
+* Gollum is not really scaleable like this anyway.
+* You can run it on the free starter plan of openshift v3 :-)
