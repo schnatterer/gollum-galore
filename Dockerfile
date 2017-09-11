@@ -38,20 +38,27 @@ RUN gem install gollum
 
 # Initialize wiki data.
 # Can be made persistent via -v /FOLDER/ON/HOST:/gollum. If so, don't forget to call "git init" in the path!
-RUN mkdir -p /gollum/wiki && git init /gollum/wiki
+RUN mkdir -p /gollum/wiki && git init /gollum/wiki \
+
+ # Create base folder for startup script.
+  && mkdir /app \
+  # Make dirs world-writeable. On Openshift this won't run as user defined bellow...
+  && chmod a+rw /app \
+  && chmod -R a+rw /gollum/wiki \
 
 # As we need to start two processes, create a startup script that starts one in the background  :-/
-RUN printf " \
-  (traefik --file.filename=/root/traefik-routes.toml $TRAEFIK_PARAMS)&  \n\
-  gollum /gollum/wiki $GOLLUM_PARAMS" > /root/startup.sh \
-&& chmod +x /root/startup.sh
+ && printf " \
+  (traefik --file.filename=/app/traefik-routes.toml $TRAEFIK_PARAMS)&  \n\
+  gollum /gollum/wiki $GOLLUM_PARAMS" > /app/startup.sh \
+ && chmod +rx /app/startup.sh
 
 # Create treafik route to gollum
-COPY traefik-routes.toml /root/traefik-routes.toml
+COPY traefik-routes.toml /app
+WORKDIR app
 
 EXPOSE 80
 EXPOSE 443
 # Don't Expose gollum port 4567!
 
 # Start traefik and gollum
-ENTRYPOINT /root/startup.sh
+ENTRYPOINT /app/startup.sh
