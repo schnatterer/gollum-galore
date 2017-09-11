@@ -9,7 +9,12 @@ ENV GOLLUM_PARAMS=""
 ENV TRAEFIK_PARAMS="--loglevel=DEBUG"
 
 # Those are for the build only
-ARG TRAEFIK_VERSION=v1.3.7
+ARG TRAEFIK_VERSION=v1.3.8
+
+# As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
+# BTW you can customize 'gollum's' git user using the following command in the (mounted) /gollum/wiki folder:
+#  git config user.name 'John Doe' && git config user.email 'john@doe.org'
+COPY startup.sh /
 
 RUN \
   apk --update add \
@@ -45,12 +50,7 @@ RUN mkdir -p /gollum/wiki && git init /gollum/wiki \
   # Make dirs world-writeable. On Openshift this won't run as user defined bellow...
   && chmod a+rw /app \
   && chmod -R a+rw /gollum/wiki \
-
-# As we need to start two processes, create a startup script that starts one in the background  :-/
- && printf " \
-  (traefik --file.filename=/app/traefik-routes.toml $TRAEFIK_PARAMS)&  \n\
-  gollum /gollum/wiki $GOLLUM_PARAMS" > /app/startup.sh \
- && chmod +rx /app/startup.sh
+  && chmod +rx /startup.sh
 
 # Create treafik route to gollum
 COPY traefik-routes.toml /app
@@ -61,4 +61,4 @@ EXPOSE 443
 # Don't Expose gollum port 4567!
 
 # Start traefik and gollum
-ENTRYPOINT /app/startup.sh
+ENTRYPOINT /startup.sh
