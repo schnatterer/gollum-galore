@@ -42,7 +42,7 @@ RUN \
   && mkdir /app \
   # Make dirs world-writeable. On Openshift this won't run as user defined bellow...
   && chmod a+rw /app \
-  && chmod -R a+rw /gollum/wiki \
+  && chmod -R a+rw /gollum/ \
 
   # Allow caddy to bind to port 80 as non-root
   && setcap cap_net_bind_service=+ep $(which caddy) \
