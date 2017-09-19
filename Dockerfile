@@ -20,6 +20,8 @@ RUN \
   alpine-sdk icu-dev \
   # Needed for running gollum
   git \
+  # Useful for backup
+  rsync openssh \
 
   # Install gollum
   && gem install gollum  \
