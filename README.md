@@ -1,4 +1,5 @@
 # gollum-gallore
+[![schnatterer/gollum-galore@docker hub](https://images.microbadger.com/badges/image/schnatterer/gollum-galore.svg)](https://hub.docker.com/r/schnatterer/gollum-galore/)
 
 🍬 [Gollum wiki](https://github.com/gollum) with lots of sugar. 🍬
 
