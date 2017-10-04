@@ -1,10 +1,14 @@
 # Build caddy from source, because binaries are published under a commercial license: https://caddyserver.com/pricing
 FROM golang:1.9.0 as caddybuild
-RUN go get -d -v github.com/mholt/caddy/caddy \
-&& cd /go/src/github.com/mholt/caddy/caddy \
-&& go get -d -v github.com/caddyserver/builds \
-&& go run build.go \
-&& CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
+ARG CADDY_VERSION="0.10.9"
+RUN \
+  git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy \
+  && cd /go/src/github.com/mholt/caddy \
+  && git checkout -b "v$CADDY_VERSION" \
+  && go get -d -v github.com/caddyserver/builds \
+  && cd /go/src/github.com/mholt/caddy/caddy \
+  && go run build.go \
+  && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
 
 # Build gollum galore
 FROM ruby:2.4.1-alpine
