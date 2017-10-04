@@ -57,7 +57,7 @@ spec:
     spec:
       containers:
       - name: gollum-galore
-        image: schnatterer/gollum-galore:0.2.0
+        image: schnatterer/gollum-galore:0.2.2
         ports:
         - containerPort: 80
         - containerPort: 443
