@@ -18,7 +18,7 @@ Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched
 
 ## Advanced
 
-`docker run -p80:80 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v ~/gollum:/gollum gollum-galore`
+`docker run -p80:80 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v ~/gollum:/gollum schnatterer/gollum-galore`
 
 Combined with the following file on your host at `~/gollum/Caddyfile`
 ```
