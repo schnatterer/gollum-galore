@@ -5,8 +5,19 @@ RUN \
   git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy \
   && cd /go/src/github.com/mholt/caddy \
   && git checkout -b "v$CADDY_VERSION" \
+  # Build Plugins http.login and http.jwt
+  #&& sed -e 's/\(\s\)"github.com\/mholt\/caddy\/caddyfile"/\1"github.com\/mholt\/caddy\/caddyfile"\n\1"github.com\/BTBurke\/caddy-jwt"\n\1"github.com\/tarent\/loginsrv/'
+  && printf " \
+  package caddyhttp \n\
+  import (  \n\
+    // http.jwt  \n\
+    _ \"github.com/BTBurke/caddy-jwt\"  \n\
+    // http.login  \n\
+    _ \"github.com/tarent/loginsrv/caddy\" \n\
+  )" > /go/src/github.com/mholt/caddy/caddyhttp/plugins.go \
   && go get -d -v github.com/caddyserver/builds \
   && cd /go/src/github.com/mholt/caddy/caddy \
+  && go get ./... \
   && go run build.go \
   && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
 
