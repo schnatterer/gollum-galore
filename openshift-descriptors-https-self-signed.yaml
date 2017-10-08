@@ -6,6 +6,7 @@ type: Opaque
 data:
   username: aGFycnk=
   password: c2FsbHk=
+  #htpasswd: aGFycnk6JGFwcjEkdnZaV2o4TDEkSWc2dzh2djRJWjRyVVFrd0dicEtHMQo=
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -14,8 +15,23 @@ metadata:
 data:
   Caddyfile: |
     import /app/Caddyfile
-    basicauth / {$BASIC_AUTH_USERNAME} {$BASIC_AUTH_PASSWORD}
+
     tls self_signed
+
+    jwt {
+        path /
+        redirect /login
+        allow sub demo
+        allow sub {$BASIC_AUTH_USERNAME}
+    }
+
+    login {
+        success-url /
+        jwt-expiry 720h # Stay logged in 30 days
+        #simple {$BASIC_AUTH_USERNAME}={$BASIC_AUTH_PASSWORD}
+        htpasswd file=/gollum/config/.htpasswd
+        # See https://github.com/tarent/loginsrv/blob/master/README.md#configuration-and-startup
+    }
 ---
 apiVersion: v1
 kind: Service
@@ -57,7 +73,7 @@ spec:
     spec:
       containers:
       - name: gollum-galore
-        image: schnatterer/gollum-galore:0.2.2
+        image: schnatterer/gollum-galore:0.3.0
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -103,8 +119,18 @@ spec:
         persistentVolumeClaim:
           claimName: gollum-gallore-persistent-storage-claim
       - name: config
-        configMap:
-            name: caddyfile
+        projected:
+          sources:
+          - secret:
+              name: credentials
+              items:
+                - key: htpasswd
+                  path: .htpasswd
+          - configMap:
+              name: caddyfile
+              items:
+                - key: Caddyfile
+                  path: Caddyfile
 ---
 # Creates the following route: <route-name>[-<namespace>].<suffix>
 # You can query it like so: oc get route gollum-galore-generated

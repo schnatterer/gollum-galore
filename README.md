@@ -3,7 +3,7 @@
 
 🍬 [Gollum wiki](https://github.com/gollum) with lots of sugar. 🍬
 
-HTTPS/TLS, HTTP2, gzip, HTTP basic, [etc](https://caddyserver.com/docs).
+HTTPS/TLS, HTTP2, gzip, HTTP basic, JWT, [etc](https://caddyserver.com/docs).
 
 Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched with sugar provided by the [caddy server](https://caddyserver.com/features).
 
@@ -16,7 +16,7 @@ Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched
 * Serves gollum at `http://localhost:8080`,
 * The wiki data is stored in an anonymous volume.
 
-## Advanced
+## Basic Auth
 
 `docker run -p80:80 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v ~/gollum:/gollum schnatterer/gollum-galore`
 
@@ -31,6 +31,30 @@ basicauth / test test
 * enables HTTP basic auth, allowing only user `test` password `test`
 *  The wiki data is stored in `~/gollum/wiki`.
 You can set the git author using `git config user.name 'John Doe' && git config user.email 'john@doe.org'` in this folder.
+
+## JWT
+
+If you prefer a login form and access tokens with longer expiry timeouts, this can be reallized using Caddy's [login](https://github.com/tarent/loginsrv/tree/master/caddy) and [jwt](https://github.com/BTBurke/caddy-jwt) plugins, that are built-in in gollum galore.
+
+```
+import /app/Caddyfile
+
+jwt {
+    path /
+    redirect /login
+    allow sub demo
+    allow sub bob
+}
+
+login {
+    success_url /
+    htpasswd file=/gollum/config/passwords
+    simple bob=secret,alice=secret
+}
+```
+This shows two possibilites: htpasswd (hashed with MD5, SHA1 or Bcrypt) and simple (not recommended, because plain and therefore less secure).
+Mount your `.htpasswd` file at `/gollum/config/passwords`. This example bases on a `.htpasswd` file user `demo`. For example: `demo:$2y$10$B/lwbuYGkYDe6wYE4LpuE.DlFFEnM7mK4V7jXDTGJUVEtGZ2P63DK` (user demo, password demo).
+Create your own .htpasswd (using Bcrypt): ` htpasswd -n -B -C15 <username>`
 
 ## HTTPS
 
@@ -50,7 +74,7 @@ On Openshift we have some other challenges to take. See bellow.
 
 You can run gollum-gallore easily on any Kubernetes cluster. It even runs on the [free starter plan of openshift v3](https://www.openshift.com/pricing/index.html).
 
-You can find all necessary descriptors in [openshift-descriptors-http.yaml](openshift-descriptors-http.yaml). Most of them are standard kubernetes except for the route, which will work only on openshift.
+You can find all necessary descriptors in [`openshift-descriptors-http.yaml`](openshift-descriptors-http.yaml). Most of them are standard kubernetes except for the route, which will work only on openshift.
 It also shows how to specify gollum params and activates basic auth for user `harry` and the password`sally` via a base64-encoded secret.
 
 If you want to deploy it, all you got to do is
@@ -99,6 +123,10 @@ Don't forget
 * If you're pod is already running, delete it to trigger a new deployment (our necessary, because we use a `StatefulSet` here):
 `kubectl delete pod gollum-galore-0`
 
+## Credentials
+
+* For Basic Auth see [`openshift-descriptors-http.yaml`](openshift-descriptors-http.yaml)
+* For JWT see [`openshift-descriptors-https-self-signed.yaml`](openshift-descriptors-https-self-signed.yaml)
 
 # Architecture decisions
 
