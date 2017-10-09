@@ -34,7 +34,7 @@ You can set the git author using `git config user.name 'John Doe' && git config 
 
 ## JWT
 
-If you prefer a login form and access tokens with longer expiry timeouts, this can be reallized using Caddy's [login](https://github.com/tarent/loginsrv/tree/master/caddy) and [jwt](https://github.com/BTBurke/caddy-jwt) plugins, that are built-in in gollum galore.
+If you prefer a login form and access tokens with longer expiry timeouts, this can be reallized using Caddy's [login](https://github.com/tarent/loginsrv/tree/master/caddy) (aka [http.login](https://caddyserver.com/docs/http.login)) and [jwt](https://github.com/BTBurke/caddy-jwt) (aka [http.jwt](https://caddyserver.com/docs/http.jwt)) plugins, that are included in gollum galore.
 
 ```
 import /app/Caddyfile
@@ -145,3 +145,11 @@ Evaluated Alternatives
 * It's just easier to ship this as one artifact.
 * Gollum is not really scaleable like this anyway.
 * You can run it on the free starter plan of openshift v3 :-)
+
+# Development
+
+Build local image and run container. Mount local folder `gollum` into the container. There, create a `Caddyfile` as shown in the examples above.
+
+* `docker build -f Dockerfile -t gollum-galore:latest .`
+* `docker run -p80:80  --name gg --rm  -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v gollum:/gollum gollum-galore`
+
