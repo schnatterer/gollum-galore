@@ -111,9 +111,9 @@ The http-challenge is not possible, because with `passthrough` routes on openshi
 
 One option would be the `dns-challenge`. [Caddy supports a number of providers](https://caddyserver.com/docs/automatic-https#dns-challenge).
 
-If you not happen to be at one of those providers, you could can create an `edge` route an either create and upload your certificates manually or create this `edge` route without specifying any certificate files. Then openhshift ships its own certificate (this results in a warning in the browser)
+If you not happen to be at one of those providers, you could can create an `edge` route an either create and upload your certificates manually or create this `edge` route without specifying any certificate files. Then openhshift ships its own certificate (this results in a warning in the browser and use of HTTP1 instead of HTTP2)
 
-A finaly option is to use a self signed certifcate (this will also result in a warning in the browser).
+A finaly option is to use a self signed certifcate (this will also result in a warning in the browser), created at each start of caddy.
 However, this setup at least proofs the concept: `yourdomain.com` delivered with a certificate created by Caddy.
 You can try this out by changing yourdomain.com in [`openshift-descriptors-https-self-signed.yaml`](openshift-descriptors-https-self-signed.yaml) and rolling it out to the cluster like so:
 `kubectl apply -f openshift-descriptors-https-self-signed.yaml`
