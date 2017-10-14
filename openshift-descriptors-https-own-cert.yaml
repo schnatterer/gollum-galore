@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: basicauth
+  name: credentials
 type: Opaque
 data:
   username: aGFycnk=
@@ -14,13 +14,25 @@ metadata:
   name: caddyfile
 data:
   Caddyfile: |
-    import /app/Caddyfile
+    {$HOST}
+    gzip
+    log stdout
 
-    tls self_signed
+    proxy / localhost:4567 {
+      # Avoid redirects from gollum to be forwarded to port 4567 in browser
+      transparent
+      except /.well-known/acme-challenge
+    }
+
+    root /gollum/webroot
+
+    #tls self_signed
+    tls /gollum/certs/cert.pem /gollum/certs/privkey.pem
 
     jwt {
         path /
         redirect /login
+        except /.well-known/acme-challenge
         allow sub demo
         allow sub {$BASIC_AUTH_USERNAME}
     }
@@ -78,8 +90,8 @@ spec:
         - containerPort: 80
         - containerPort: 443
         volumeMounts:
-        - name: wiki
-          mountPath: /gollum/wiki
+        - name: gollum
+          mountPath: /gollum
         - name: config
           mountPath: /gollum/config
         resources:
@@ -99,9 +111,11 @@ spec:
           periodSeconds: 10
         env:
         - name: GOLLUM_PARAMS
-          value: --allow-uploads --live-preview
+          value: --allow-uploads --live-preview --show-all
         - name: CADDY_PARAMS
-          value: -conf /gollum/config/Caddyfile -log stdout
+          value: -conf /gollum/config/Caddyfile -log stdou
+        - name: CADDYPATH
+          value: /gollum/caddy
         - name: HOST
           value: yourdomain.com:443
         - name: BASIC_AUTH_USERNAME
@@ -114,8 +128,8 @@ spec:
             secretKeyRef:
               name: basicauth
               key: password
-      volumes:
-      - name: wiki
+                volumes:
+      - name: gollum
         persistentVolumeClaim:
           claimName: gollum-gallore-persistent-storage-claim
       - name: config
@@ -161,7 +175,3 @@ spec:
   to:
     kind: Service
     name: gollum-galore
----
-# Allow unsecure HTTP only for acme challenge does not work. The passthrough route seems to always take precedence.
-  #host: yourdomain.com
-  #path: /.well-known
