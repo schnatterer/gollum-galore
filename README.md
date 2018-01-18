@@ -93,60 +93,7 @@ Sidenote: There also is a [(discontinued) first version of an openshift template
 
 ## HTTPS (Custom Domain)
 
-Unfortunately, no luck getting Letsencrypt running on openshift, yet.
-
-A promising setup would be
-
-* Leave the generated route from the simple setup in place and use it to create a CNAME record with your DNS provider.
-* Create another `passthrough` route to our `gollum-galore` service, which should be able to pass the `http-challenge`.
-* Use the following params to start caddy
-```yaml
-name: CADDY_PARAMS
-value: -log stdout -agree -disable-tls-sni-challenge -email=you@yourdomain.com
-```
-
-I'm not sure about the reasons. It seems to take some time until the app is reachable from the outside, but the challenge is done when the server starts, before the URL can be reached.
-
-For the `tls-sni-challenge`, openshift always returns its own certificate, leading to a failure.
-
-One option would be the `dns-challenge`. [Caddy supports a number of providers](https://caddyserver.com/docs/automatic-https#dns-challenge).
-
-If you not happen to be at one of those providers, you could can create an `edge` route an either create and upload your certificates manually or create this `edge` route without specifying any certificate files. Then openhshift ships its own certificate (this results in a warning in the browser and use of HTTP1 instead of HTTP2)
-
-
-Yet another option is to use a self signed certifcate (this will also result in a warning in the browser), created at each start of caddy.
-However, this setup at least proofs the concept: `yourdomain.com` delivered with a certificate created by Caddy.
-You can try this out by changing yourdomain.com in [`openshift-descriptors-https-self-signed.yaml`](openshift-descriptors-https-self-signed.yaml) and rolling it out to the cluster like so:
-`kubectl apply -f openshift-descriptors-https-self-signed.yaml`
-
-A final option is to create a letsencrypt certificate manually (must be refreshed every 3 months) and copy it into Caddy.
-
-* In [`openshift-descriptors-https-own-cert.yaml`](openshift-descriptors-https-own-cert.yaml)
-  * Changing yourdomain.com to your domain
-  * Uncomment `tls self_signed`
-  * Comment: `tls /gollum/certs/cert.pem /gollum/certs/privkey.pem`
-* Roll it out to the cluster like so: `kubectl apply -f openshift-descriptors-https-own-cert.yaml`
-* Install certbot locally
-* `sudo letsencrypt certonly --manual -d yourdomain.com
-* **Don't** press enter, Copy `printf line`
-* Different terminal: 
-* `kubectl exec -ti gollum-galore-0 sh`
-* `cd /gollum/webroot printf "%s" A5N5H8pyYeOsa-uZl4AhdXlECmAlE-PC0dqg2xN9trA.UBsxCJfQtd0tm5xUwWGW70xKeRAo74t7snC0\_keJ\_6M > .well-known/acme-challenge/A5N5H8pyYeOsb-uZl4AhdXaEEmJlE-PC0gqa2xN9trA
-* Check if file is shipped: curl http://yourdomain.com/.well-known/acme-challenge/A5N5H8pyYeOsb-uZl4AhdXaEEmJlE-PC0gqa2xN9trA
-* In the first terminal: Press enter. You should now have the certifcates.
-* `sudo kubectl cp /etc/letsencrypt/live/yourdomain.com/privkey.pem gollum-galore-0:/gollum/certs/privkey.pem`
-* `sudo kubectl cp /etc/letsencrypt/live/yourdomain.com/cert.pem gollum-galore-0:/gollum/certs/cert.pem`
-* Back to [`openshift-descriptors-https-own-cert.yaml`](openshift-descriptors-https-own-cert.yaml)
-  * Comment `tls self_signed`
-  * Uncomment: `tls /gollum/certs/cert.pem /gollum/certs/privkey.pem`
-* `kubectl apply -f openshift-descriptors-https-own-cert.yaml`
-* kubectl delete po gollum-galore-0
-
-
-Don't forget
-* to create the DNS CNAME entry as described above,
-* If you're pod is already running, delete it to trigger a new deployment (our necessary, because we use a `StatefulSet` here):
-`kubectl delete pod gollum-galore-0`
+Unfortunately, no luck getting Letsencrypt running on openshift. There justed to be workarounds (see git history of this file) but Openshift seems to have ended their "grace period during the initial launch of Starter" (see [here](https://www.queryxchange.com/q/27_47104454/openshift-online-v3-adding-new-route-gives-forbidden-error/)) plan, where they did not enforce that you cannot specify domain names with the starter plan.
 
 ## Credentials
 
