@@ -4,7 +4,7 @@ ARG CADDY_VERSION="0.10.10"
 RUN \
   git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy \
   && cd /go/src/github.com/mholt/caddy \
-  && git checkout -b "v$CADDY_VERSION" \
+  && git checkout tags/"v$CADDY_VERSION" -b "v$CADDY_VERSION" \
   # Build Plugins http.login and http.jwt
   #&& sed -e 's/\(\s\)"github.com\/mholt\/caddy\/caddyfile"/\1"github.com\/mholt\/caddy\/caddyfile"\n\1"github.com\/BTBurke\/caddy-jwt"\n\1"github.com\/tarent\/loginsrv/'
   && printf " \
