@@ -1,6 +1,6 @@
 # Build caddy from source, because binaries are published under a commercial license: https://caddyserver.com/pricing
 FROM golang:1.10.0 as caddybuild
-ARG CADDY_VERSION="0.10.10"
+ARG CADDY_VERSION="0.10.14"
 RUN \
   git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy \
   && cd /go/src/github.com/mholt/caddy \
