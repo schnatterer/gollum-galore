@@ -26,6 +26,8 @@ FROM ruby:2.4.1-alpine
 
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
+ENV GOLLUM_VERSION="4.1.3"
+
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
 # e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
 ENV GOLLUM_PARAMS=''
@@ -48,7 +50,7 @@ RUN \
   # Useful for backup
   rsync openssh \
   # Install gollum
-  && gem install gollum  \
+  && gem install gollum -v $GOLLUM_VERSION \
   # cleanup apk cache
   && rm -rf /var/cache/apk/* \
   # Initialize wiki data.
