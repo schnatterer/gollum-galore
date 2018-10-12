@@ -22,11 +22,24 @@ RUN \
   && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
 
 # Build gollum galore
-FROM ruby:2.4.1-alpine
+# As of 10/2018 ruby 2.3 seems the be te latest ruby version provided with The latest alpine 3.8
+FROM ruby:2.3.7-alpine3.8
 
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
 ENV GOLLUM_VERSION="4.1.3"
+
+# https://pkgs.alpinelinux.org/packages?name=git&branch=v3.8
+ENV GIT_VERSION=2.18.0-r0
+# https://pkgs.alpinelinux.org/packages?name=rsync&branch=v3.8
+ENV RSYNC_VERSION=3.1.3-r1
+# https://pkgs.alpinelinux.org/packages?name=openssh&branch=v3.8
+ENV OPENSSH_VERSION=7.7_p1-r3
+
+# https://pkgs.alpinelinux.org/packages?name=openssh&branch=v3.8
+ENV ALPINE_SDK_VERSION=1.0-r0
+#https://pkgs.alpinelinux.org/packages?name=icu-dev&branch=v3.8
+ENV ICU_DEV_VERSION=60.2-r2
 
 # Additional gollom config: See https://github.com/gollum/gollum#configuration
 # e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
@@ -44,11 +57,11 @@ COPY --from=caddybuild /go/src/github.com/mholt/caddy/caddy/caddy /usr/local/bin
 RUN \
   apk --update add \
   # Need for gem install TODO move to docker.build?
-  alpine-sdk icu-dev \
+  alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION \
   # Needed for running gollum
-  git \
+  git=$GIT_VERSION \
   # Useful for backup
-  rsync openssh \
+  rsync=$RSYNC_VERSION openssh=$OPENSSH_VERSION \
   # Install gollum
   && gem install gollum -v $GOLLUM_VERSION \
   # cleanup apk cache
