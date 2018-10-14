@@ -27,7 +27,7 @@ FROM ruby:2.3.7-alpine3.8
 
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
-ENV GOLLUM_VERSION="4.1.3"
+ENV GOLLUM_VERSION="4.1.2"
 
 # https://pkgs.alpinelinux.org/packages?name=git&branch=v3.8
 ENV GIT_VERSION=2.18.0-r0
