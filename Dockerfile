@@ -5,6 +5,8 @@ RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
 WORKDIR  /go/src/github.com/mholt/caddy
 RUN git checkout tags/"$CADDY_VERSION" -b "$CADDY_VERSION"
 # Include Plugins http.login and http.jwt
+# TODO the plugins are there but a succesful login no longer redirects us.
+# www-authenticate header: Bearer realm="",error="invalid_token"
 RUN sed -ie 's/\/\/ This is where other plugins get plugged in (imported)/_ "github.com\/BTBurke\/caddy-jwt"\n        _ "github.com\/tarent\/loginsrv\/caddy"/' \
    /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
 RUN go get -d -v github.com/caddyserver/builds
