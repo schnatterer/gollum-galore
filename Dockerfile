@@ -12,6 +12,15 @@ WORKDIR /go/src/github.com/mholt/caddy/caddy
 RUN go get ./...
 RUN go run build.go
 
+# Prepare file structure for final image
+RUN mkdir -p /dist/app && mkdir -p /dist/usr/local/bin
+RUN cp /go/src/github.com/mholt/caddy/caddy/caddy /dist/usr/local/bin/
+# As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
+# BTW you can customize 'gollum's' git user using the following command in the (mounted) /gollum/wiki folder:
+#  git config user.name 'John Doe' && git config user.email 'john@doe.org'
+COPY startup.sh /dist/startup.sh
+COPY Caddyfile /dist/app/
+
 # Build gollum galore
 FROM ruby:2.6.1-alpine3.9
 
@@ -31,14 +40,10 @@ ENV GOLLUM_VERSION=4.1.2 \
   CADDY_PARAMS='' \
   HOST=':80'
 
-# As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
-# BTW you can customize 'gollum's' git user using the following command in the (mounted) /gollum/wiki folder:
-#  git config user.name 'John Doe' && git config user.email 'john@doe.org'
-COPY startup.sh /startup.sh
-COPY Caddyfile /app/Caddyfile
-COPY --from=caddybuild /go/src/github.com/mholt/caddy/caddy/caddy /usr/local/bin/
+COPY --from=caddybuild /dist /
 
 RUN \
+  set -x && \
   apk --update add \
   # Need for gem install TODO move to docker.build?
   alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION \
