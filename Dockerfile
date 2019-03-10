@@ -40,7 +40,7 @@ ENV GOLLUM_VERSION=4.1.2 \
   CADDY_PARAMS='' \
   HOST=':80'
 
-COPY --from=caddybuild /dist /
+COPY --from=caddybuild --chown=1000:1000 /dist /
 
 RUN \
   set -x && \
@@ -65,6 +65,12 @@ RUN \
   && setcap cap_net_bind_service=+ep $(which caddy) \
   && chmod +rx /startup.sh
 
+RUN addgroup -g 1000 gollum && adduser -u 1000 -G gollum -s /bin/sh -D gollum \
+ && chown -R gollum:gollum /app \
+ && chown -R gollum:gollum /gollum \
+ && chown gollum:gollum /startup.sh
+
+USER gollum
 WORKDIR  app
 
 EXPOSE 80
