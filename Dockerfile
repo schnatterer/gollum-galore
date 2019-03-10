@@ -1,17 +1,21 @@
 # Build caddy from source, because binaries are published under a commercial license: https://caddyserver.com/pricing
 FROM golang:1.12.0 as caddybuild
+
 ARG CADDY_VERSION="v0.11.5"
+ARG CADDY_JWT_VERSION="v3.3.0"
+ARG LOGINSRV_VERSION="v1.1.0"
+
 RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
 WORKDIR  /go/src/github.com/mholt/caddy
 RUN git checkout tags/"$CADDY_VERSION" -b "$CADDY_VERSION"
 # Include Plugins http.login and http.jwt
-# TODO the plugins are there but a succesful login no longer redirects us.
-# www-authenticate header: Bearer realm="",error="invalid_token"
 RUN sed -ie 's/\/\/ This is where other plugins get plugged in (imported)/_ "github.com\/BTBurke\/caddy-jwt"\n        _ "github.com\/tarent\/loginsrv\/caddy"/' \
    /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
 RUN go get -d -v github.com/caddyserver/builds
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 RUN go get ./...
+RUN cd $GOPATH/src/github.com/BTBurke/caddy-jwt && git checkout tags/"$CADDY_JWT_VERSION" -b "$CADDY_JWT_VERSION"
+RUN cd $GOPATH/src/github.com/tarent/loginsrv/caddy && git checkout tags/"$LOGINSRV_VERSION" -b "$LOGINSRV_VERSION"
 RUN go run build.go
 
 # Prepare file structure for final image
@@ -65,15 +69,15 @@ RUN \
   && chmod -R a+rw /gollum/ \
   # Allow caddy to bind to port 80 as non-root
   && setcap cap_net_bind_service=+ep $(which caddy) \
-  && chmod +rx /startup.sh
-
-RUN addgroup -g 1000 gollum && adduser -u 1000 -G gollum -s /bin/sh -D gollum \
- && chown -R gollum:gollum /app \
- && chown -R gollum:gollum /gollum \
- && chown gollum:gollum /startup.sh
+  && chmod +rx /startup.sh \
+  # Don't run as root
+  && addgroup -g 1000 gollum && adduser -u 1000 -G gollum -s /bin/sh -D gollum \
+  && chown -R gollum:gollum /app \
+  && chown -R gollum:gollum /gollum \
+  && chown gollum:gollum /startup.sh
 
 USER gollum
-WORKDIR  app
+WORKDIR app
 
 EXPOSE 80
 EXPOSE 443
