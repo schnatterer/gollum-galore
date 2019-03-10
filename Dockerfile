@@ -4,6 +4,7 @@ ARG CADDY_VERSION="0.10.14"
 RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
 WORKDIR  /go/src/github.com/mholt/caddy
 RUN git checkout tags/"v$CADDY_VERSION" -b "v$CADDY_VERSION"
+RUN export CADDY_VERSION
   # Build Plugins http.login and http.jwt
   #&& sed -e 's/\(\s\)"github.com\/mholt\/caddy\/caddyfile"/\1"github.com\/mholt\/caddy\/caddyfile"\n\1"github.com\/BTBurke\/caddy-jwt"\n\1"github.com\/tarent\/loginsrv/'
 RUN printf " \
@@ -21,25 +22,20 @@ RUN go run build.go
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
 
 # Build gollum galore
-# As of 10/2018 ruby 2.3 seems the be te latest ruby version provided with The latest alpine 3.8
-FROM ruby:2.3.7-alpine3.8
+FROM ruby:2.6.1-alpine3.9
 
 MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 
 # - Sources:
-#   - https://pkgs.alpinelinux.org/packages?name=git&branch=v3.8
-#   - https://pkgs.alpinelinux.org/packages?name=rsync&branch=v3.8
-#   - https://pkgs.alpinelinux.org/packages?name=openssh&branch=v3.8
+#   - https://pkgs.alpinelinux.org/packages?name=git&branch=v3.9
 # - GOLLUM_PARAMS. Additional gollom config: See https://github.com/gollum/gollum#configuration
 #    e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
 # - CADDY_PARAMS e.g '-conf /gollum/config/Caddyfile', in addition to -v /FOLDER/ON/HOST:/gollum/config
 # We could use ARG here, but it seems impossible to compress multiple ARGs into one layer
 ENV GOLLUM_VERSION=4.1.2 \
-  GIT_VERSION=2.18.1-r0 \
-  RSYNC_VERSION=3.1.3-r1 \
-  OPENSSH_VERSION=7.7_p1-r4 \
+  GIT_VERSION=2.20.1-r0 \
   ALPINE_SDK_VERSION=1.0-r0 \
-  ICU_DEV_VERSION=60.2-r2 \
+  ICU_DEV_VERSION=62.1-r0 \
   GOLLUM_PARAMS='' \
   CADDY_PARAMS='' \
   HOST=':80'
@@ -57,8 +53,6 @@ RUN \
   alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION \
   # Needed for running gollum
   git=$GIT_VERSION \
-  # Useful for backup
-  rsync=$RSYNC_VERSION openssh=$OPENSSH_VERSION \
   # Install gollum
   && gem install gollum -v $GOLLUM_VERSION \
   # cleanup apk cache
