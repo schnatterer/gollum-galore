@@ -5,4 +5,11 @@ log stdout
 proxy / localhost:4567 {
   # Avoid redirects from gollum to be forwarded to port 4567 in browser
   transparent
+  # Providing the server vendor provides an attack vector. So don't!
+  header_downstream -Server
+}
+
+header / {
+  # Providing the server vendor provides an attack vector. So don't!
+  -Server
 }
