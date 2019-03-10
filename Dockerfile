@@ -11,9 +11,14 @@ RUN git checkout tags/"$CADDY_VERSION" -b "$CADDY_VERSION"
 # Include Plugins http.login and http.jwt
 RUN sed -ie 's/\/\/ This is where other plugins get plugged in (imported)/_ "github.com\/BTBurke\/caddy-jwt"\n        _ "github.com\/tarent\/loginsrv\/caddy"/' \
    /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
+# Disable telemtry
+RUN sed -ie 's/var EnableTelemetry = true/var EnableTelemetry = false/' /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
+# Needed for "caddy -version" to return something useful
 RUN go get -d -v github.com/caddyserver/builds
 WORKDIR /go/src/github.com/mholt/caddy/caddy
+# Resolve all dependencies
 RUN go get ./...
+# Check out deterministic versions of plugins that are tested to work with each other
 RUN cd $GOPATH/src/github.com/BTBurke/caddy-jwt && git checkout tags/"$CADDY_JWT_VERSION" -b "$CADDY_JWT_VERSION"
 RUN cd $GOPATH/src/github.com/tarent/loginsrv/caddy && git checkout tags/"$LOGINSRV_VERSION" -b "$LOGINSRV_VERSION"
 RUN go run build.go
