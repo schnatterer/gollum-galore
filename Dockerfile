@@ -1,25 +1,16 @@
 # Build caddy from source, because binaries are published under a commercial license: https://caddyserver.com/pricing
 FROM golang:1.12.0 as caddybuild
-ARG CADDY_VERSION="0.11.5"
+ARG CADDY_VERSION="v0.11.5"
 RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
 WORKDIR  /go/src/github.com/mholt/caddy
-RUN git checkout tags/"v$CADDY_VERSION" -b "v$CADDY_VERSION"
-RUN export CADDY_VERSION
-  # Build Plugins http.login and http.jwt
-  #&& sed -e 's/\(\s\)"github.com\/mholt\/caddy\/caddyfile"/\1"github.com\/mholt\/caddy\/caddyfile"\n\1"github.com\/BTBurke\/caddy-jwt"\n\1"github.com\/tarent\/loginsrv/'
-RUN printf " \
-  package caddyhttp \n\
-  import (  \n\
-    // http.jwt  \n\
-    _ \"github.com/BTBurke/caddy-jwt\"  \n\
-    // http.login  \n\
-    _ \"github.com/tarent/loginsrv/caddy\" \n\
-  )" > /go/src/github.com/mholt/caddy/caddyhttp/plugins.go
+RUN git checkout tags/"$CADDY_VERSION" -b "$CADDY_VERSION"
+# Include Plugins http.login and http.jwt
+RUN sed -ie 's/\/\/ This is where other plugins get plugged in (imported)/_ "github.com\/BTBurke\/caddy-jwt"\n        _ "github.com\/tarent\/loginsrv\/caddy"/' \
+   /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
 RUN go get -d -v github.com/caddyserver/builds
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 RUN go get ./...
 RUN go run build.go
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o caddy .
 
 # Build gollum galore
 FROM ruby:2.6.1-alpine3.9
