@@ -38,7 +38,7 @@ MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
 #    e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
 # - CADDY_PARAMS e.g '-conf /gollum/config/Caddyfile', in addition to -v /FOLDER/ON/HOST:/gollum/config
 # We could use ARG here, but it seems impossible to compress multiple ARGs into one layer
-ENV GOLLUM_VERSION=4.1.2 \
+ENV GOLLUM_VERSION=4.1.4 \
   GIT_VERSION=2.20.1-r0 \
   ALPINE_SDK_VERSION=1.0-r0 \
   ICU_DEV_VERSION=62.1-r0 \
