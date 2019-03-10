@@ -1,0 +1,5 @@
+# Start by ignoring all
+**
+# Whitelist
+!startup.sh
+!Caddyfile
