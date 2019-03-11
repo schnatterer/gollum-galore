@@ -61,7 +61,8 @@ This shows two possibilites: htpasswd (hashed with MD5, SHA1 or Bcrypt) and simp
 Mount your `.htpasswd` file at `/gollum/config/passwords`. This example bases on a `.htpasswd` file user `demo`. For example: `demo:$2y$10$B/lwbuYGkYDe6wYE4LpuE.DlFFEnM7mK4V7jXDTGJUVEtGZ2P63DK` (user demo, password demo).
 Create your own .htpasswd (using Bcrypt): ` htpasswd -n -B -C15 <username>`.
 
-Note: If you're running in **HTTP mode** (no HTTPS/TLS) you will have to set `cookie_secure false` in `login`!  
+Note: If you're running in **HTTP mode** (no HTTPS/TLS) you will have to set `cookie_secure false` in `login`!
+The other option is to use a self-signed certificate, see bellow.  
 See https://github.com/BTBurke/caddy-jwt/issues/42 
 
 ## HTTPS
@@ -75,6 +76,20 @@ This will of course only work if this is bound to yourdomain.com:80 and yourdoma
 See also [Automatic HTTPS - Caddy](https://caddyserver.com/docs/automatic-https).
 
 On Openshift we have some other challenges to take. See bellow.
+
+### Self signed
+
+For local testing you might want to use a self-signed certificate. This can be done as follows:
+
+`docker run -p8443:443 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile" -e HOST="*:443" " -v ~/gollum:/gollum gollum`
+
+Combined with the following file on your host at `~/gollum/Caddyfile`:
+
+```
+import /app/Caddyfile
+
+tls self_signed
+```
 
 # Running on Kubernetes (Openshift)
 
