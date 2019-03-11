@@ -81,6 +81,8 @@ RUN \
   && chown -R gollum:gollum /gollum \
   && chown gollum:gollum /startup.sh
 
+VOLUME /gollum/wiki
+
 USER gollum
 WORKDIR app
 
