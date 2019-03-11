@@ -1,0 +1,12 @@
+import /app/Caddyfile
+
+jwt {
+    path /
+    redirect /login
+    allow sub bob
+}
+
+login {
+    success_url /
+    simple bob=secret,alice=secret
+}
