@@ -21,7 +21,7 @@ If you're interested in git-based wikis, also have a look at [gollum-galore](htt
 
 ## Basic Auth
 
-`docker run -p80:80 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v ~/gollum:/gollum schnatterer/gollum-galore`
+`docker run -p80:80 -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile" -v ~/gollum:/gollum schnatterer/gollum-galore`
 
 Combined with the following file on your host at `~/gollum/Caddyfile`
 ```
@@ -39,7 +39,7 @@ You can set the git author using `git config user.name 'John Doe' && git config 
 
 ## JWT
 
-If you prefer a login form and access tokens with longer expiry timeouts, this can be reallized using Caddy's [login](https://github.com/tarent/loginsrv/tree/master/caddy) (aka [http.login](https://caddyserver.com/docs/http.login)) and [jwt](https://github.com/BTBurke/caddy-jwt) (aka [http.jwt](https://caddyserver.com/docs/http.jwt)) plugins, that are included in gollum galore.
+If you prefer a login form and access tokens with longer expiry timeouts, this can be realized using Caddy's [login](https://github.com/tarent/loginsrv/tree/master/caddy) (aka [http.login](https://caddyserver.com/docs/http.login)) and [jwt](https://github.com/BTBurke/caddy-jwt) (aka [http.jwt](https://caddyserver.com/docs/http.jwt)) plugins, that are included in gollum galore.
 
 ```
 import /app/Caddyfile
@@ -59,7 +59,10 @@ login {
 ```
 This shows two possibilites: htpasswd (hashed with MD5, SHA1 or Bcrypt) and simple (not recommended, because plain and therefore less secure).
 Mount your `.htpasswd` file at `/gollum/config/passwords`. This example bases on a `.htpasswd` file user `demo`. For example: `demo:$2y$10$B/lwbuYGkYDe6wYE4LpuE.DlFFEnM7mK4V7jXDTGJUVEtGZ2P63DK` (user demo, password demo).
-Create your own .htpasswd (using Bcrypt): ` htpasswd -n -B -C15 <username>`
+Create your own .htpasswd (using Bcrypt): ` htpasswd -n -B -C15 <username>`.
+
+Note: If you're running in **HTTP mode** (no HTTPS/TLS) you will have to set `cookie_secure false` in `login`!  
+See https://github.com/BTBurke/caddy-jwt/issues/42 
 
 ## HTTPS
 
@@ -128,5 +131,5 @@ Evaluated Alternatives
 Build local image and run container. Mount local folder `gollum` into the container. There, create a `Caddyfile` as shown in the examples above.
 
 * `docker build -f Dockerfile -t gollum-galore:latest .`
-* `docker run -p80:80  --name gg --rm  -e CADDY_PARAMS="-conf /gollum/config/Caddyfile -log stdout" -v gollum:/gollum gollum-galore`
+* `docker run -p80:80  --name gg --rm  -e CADDY_PARAMS="-conf /gollum/config/Caddyfile" -v gollum:/gollum gollum-galore`
 

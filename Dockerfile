@@ -2,8 +2,8 @@
 FROM golang:1.12.0 as caddybuild
 
 ARG CADDY_VERSION="v0.11.5"
-ARG CADDY_JWT_VERSION="v3.3.0"
-ARG LOGINSRV_VERSION="v1.1.0"
+ARG CADDY_JWT_VERSION="v3.7.0"
+ARG LOGINSRV_VERSION="v1.3.0"
 
 RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
 WORKDIR  /go/src/github.com/mholt/caddy
