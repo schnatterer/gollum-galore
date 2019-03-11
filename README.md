@@ -1,4 +1,5 @@
 # gollum-gallore
+[![Build Status](https://travis-ci.org/schnatterer/gollum-galore.svg?branch=master)](https://travis-ci.org/schnatterer/gollum-galore)
 [![schnatterer/gollum-galore@docker hub](https://images.microbadger.com/badges/image/schnatterer/gollum-galore.svg)](https://hub.docker.com/r/schnatterer/gollum-galore/)
 
 🍬 [Gollum wiki](https://github.com/gollum) with lots of sugar. 🍬
@@ -7,7 +8,7 @@ HTTPS/TLS, HTTP2, gzip, HTTP basic, JWT, [etc](https://caddyserver.com/docs).
 
 Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched with sugar provided by the [caddy server](https://caddyserver.com/features).
 
-If you're interested in git-based wikis, also have a look at [smeagol-galore](https://github.com/schnatterer/smeagol-galore), which is much faster than gollum, has a modern WYSIWYG interface, including [PlantUML](http://plantuml.com/) and includes [SCM-Manager](https://www.scm-manager.org/) to provide direct access to your Git repos.
+If you're interested in git-based wikis, also have a look at [gollum-galore](https://github.com/schnatterer/gollum-galore), which is much faster than gollum, has a modern WYSIWYG interface, including [PlantUML](http://plantuml.com/) and includes [SCM-Manager](https://www.scm-manager.org/) to provide direct access to your Git repos.
 
 # Getting to it
 
@@ -31,7 +32,9 @@ basicauth / test test
 * Serves gollum at `http://localhost`,
 * some of [gollum's command line options](https://github.com/gollum/gollum#configuration) are set
 * enables HTTP basic auth, allowing only user `test` password `test`
-*  The wiki data is stored in `~/gollum/wiki`.
+* The wiki data is stored in `~/gollum/wiki`.  
+  Make sure that UID/GID 1000 (used by the container) are allowed to write here. 
+
 You can set the git author using `git config user.name 'John Doe' && git config user.email 'john@doe.org'` in this folder.
 
 ## JWT
@@ -62,7 +65,7 @@ Create your own .htpasswd (using Bcrypt): ` htpasswd -n -B -C15 <username>`
 
 The following makes Caddy challenge a certificate at letsencrypt.
 
-`docker run -p80:80 -e 443:443 -e HOST=yourdomain.com -e CADDY_PARAMS=" -agree -email=you@yourdomain.com -log stdout" -v ~/gollum:/gollum gollum-galore`
+`docker run -p80:80 -e 443:443 -e HOST=yourdomain.com -e CADDY_PARAMS=" -agree -email=you@yourdomain.com" -v ~/gollum:/gollum gollum-galore`
 
 This will of course only work if this is bound to yourdomain.com:80 and yourdomain:443.
 
