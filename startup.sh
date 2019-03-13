@@ -3,4 +3,4 @@
 # Set ENV only for caddy process. Makes it read the Caddyfile and store its other files in /app
 (HOME=/app caddy $CADDY_PARAMS)&
 # Start gollum in the foreground
-gollum /gollum/wiki $GOLLUM_PARAMS
+exec gollum /gollum/wiki $GOLLUM_PARAMS
