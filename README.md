@@ -8,7 +8,7 @@ HTTPS/TLS, HTTP2, gzip, HTTP basic, JWT, [etc](https://caddyserver.com/docs).
 
 Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched with sugar provided by the [caddy server](https://caddyserver.com/features).
 
-If you're interested in git-based wikis, also have a look at [gollum-galore](https://github.com/schnatterer/gollum-galore), which is much faster than gollum, has a modern WYSIWYG interface, including [PlantUML](http://plantuml.com/) and includes [SCM-Manager](https://www.scm-manager.org/) to provide direct access to your Git repos.
+If you're interested in git-based wikis, also have a look at [smeagol-galore](https://github.com/schnatterer/smeagol-galore), which is much faster than gollum, has a modern WYSIWYG interface, including [PlantUML](http://plantuml.com/) and includes [SCM-Manager](https://www.scm-manager.org/) to provide direct access to your Git repos.
 
 # Getting to it
 
