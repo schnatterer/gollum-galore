@@ -91,6 +91,11 @@ import /app/Caddyfile
 tls self_signed
 ```
 
+## Behind a HTTP proxy
+
+See [examples/behind-http-proxy](examples/behind-http-proxy/README.md).  
+Also contains a [`docker-compose.yaml`](examples/behind-http-proxy/docker-compose.yaml) showcase.
+
 # Running on Kubernetes (Openshift)
 
 ## Simple setup

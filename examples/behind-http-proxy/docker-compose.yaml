@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+  gollum-galore:
+    image: schnatterer/gollum-galore:0.4.0
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    environment:
+      - GOLLUM_PARAMS=--allow-uploads --show-all
+      - CADDY_PARAMS=-conf /gollum/config/Caddyfile
+      - HOST=http://*
+      # Optional: Use a constant JWT secret so your logins survive a restart
+      - JWT_SECRET=<512chars>
+    networks:
+      gollum_galore:
+        ipv4_address: 172.1.1.2
+    restart: unless-stopped
+    volumes:
+      - gollum-galore:/gollum/wiki
+      - type: bind
+        source: ./config
+        target: /gollum/config
+        read_only: true
+
+networks:
+  gollum_galore:
+    external: false
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.1.1.0/24
+
+volumes:
+  gollum-galore:

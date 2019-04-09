@@ -1,0 +1,26 @@
+{$HOST} {
+  gzip
+  log stdout
+
+  proxy / localhost:4567 {
+    # Avoid redirects from gollum to be forwarded to port 4567 in browser
+    transparent
+    # Caddy does not forward any the X-Forwarded-* headers it receives
+    # See https://github.com/mholt/caddy/issues/2550
+    header_upstream X-Forwarded-Proto {>X-Forwarded-Proto}
+  }
+
+  jwt {
+    path /
+    redirect /login
+    allow sub demo
+  }
+
+  login {
+    success-url /
+    jwt-expiry 720h
+    htpasswd file=/gollum/config/.htpasswd
+    # See https://github.com/tarent/loginsrv/blob/master/README.md#configuration-and-startup
+    jwt-secret {$JWT_SECRET}
+  }
+}
