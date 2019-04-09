@@ -6,7 +6,7 @@ Gollum galore (i.e. Caddy).
 
 For this to work you'll have to set
 
-* the `HOST` variable to `http://*` (or `*:80`) and
+* the `HOST` variable to `*` and
 * `header_upstream X-Forwarded-Proto {>X-Forwarded-Proto}` in the `proxy` block for Requests to gollum.
 * See [`Caddyfile`](config/Caddyfile).
 
@@ -30,4 +30,4 @@ Start with
 docker-compose up -d
 ```
 
-Gollum galore can be reached vid HTTP on `172.1.1.2:80`
+Gollum galore can be reached vid on `http://172.1.1.2:2015`

@@ -8,7 +8,7 @@ services:
     environment:
       - GOLLUM_PARAMS=--allow-uploads --show-all
       - CADDY_PARAMS=-conf /gollum/config/Caddyfile
-      - HOST=http://*
+      - HOST=*
       # Optional: Use a constant JWT secret so your logins survive a restart
       - JWT_SECRET=<512chars>
     networks:
