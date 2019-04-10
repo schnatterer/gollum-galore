@@ -1,6 +1,8 @@
 #!/bin/sh
 set -o errexit -o nounset -o pipefail
 
+echo "Starting Gollum Galore $(cat /app/version)"
+
 # Make sure wiki folder is always initialized, also on mounted volumes
 (git init /gollum/wiki)&
 # Set ENV only for caddy process. Makes it read the Caddyfile and store its other files in /app

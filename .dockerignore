@@ -3,3 +3,5 @@
 # Whitelist
 !startup.sh
 !Caddyfile
+# The version is is discoverd from git during the docker build
+!.git

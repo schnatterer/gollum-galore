@@ -31,6 +31,13 @@ RUN cp /go/src/github.com/mholt/caddy/caddy/caddy /dist/usr/local/bin/
 #  git config user.name 'John Doe' && git config user.email 'john@doe.org'
 COPY startup.sh /dist/startup.sh
 COPY Caddyfile /dist/app/
+# Write gollum galores version number
+COPY .git /gollum-galore/.git
+RUN set -x; cd /gollum-galore && \
+     POTENTIAL_TAG="$(git name-rev --name-only --tags HEAD)" \
+     COMMIT="commit $(git rev-parse --short HEAD)"; \
+     (if [ "${POTENTIAL_TAG}" != "undefined" ]; then echo "${POTENTIAL_TAG} (${COMMIT})"; \
+      else echo "${COMMIT}"; fi) > /dist/app/version
 
 # Build gollum galore
 FROM ruby:2.6.1-alpine3.9
