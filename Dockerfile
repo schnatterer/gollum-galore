@@ -26,9 +26,33 @@ RUN go run build.go
 # Prepare file structure for final image
 RUN mkdir -p /dist/app && mkdir -p /dist/usr/local/bin
 RUN cp /go/src/github.com/mholt/caddy/caddy/caddy /dist/usr/local/bin/
+
+
+# Declare common ruby base image for all ruby-stages
+FROM ruby:2.6.2-alpine3.9 as gollum-ruby
+
+
+FROM gollum-ruby as gollum-build
+
+ARG ALPINE_SDK_VERSION=1.0-r0
+ARG ICU_DEV_VERSION=62.1-r0
+ARG GOLLUM_VERSION=4.1.4
+
+COPY --from=caddybuild --chown=1000:1000 /dist /dist
+
+# Need for gem install
+RUN apk add  alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION
+# Install gollum
+RUN gem install gollum -v $GOLLUM_VERSION
+RUN mv /usr/local/bundle /dist/usr/local/bundle
+
+# Copy necessary libraries native extensions of ruby gems
+RUN mkdir -p /dist/usr/lib
+RUN cp /usr/lib/libicuuc.so* /dist/usr/lib/
+RUN cp /usr/lib/libicui18n.so* /dist/usr/lib/
+RUN cp /usr/lib/libicudata.so* /dist/usr/lib/
+
 # As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
-# BTW you can customize 'gollum's' git user using the following command in the (mounted) /gollum/wiki folder:
-#  git config user.name 'John Doe' && git config user.email 'john@doe.org'
 COPY startup.sh /dist/startup.sh
 COPY Caddyfile /dist/app/
 # Write gollum galores version number
@@ -39,27 +63,17 @@ RUN set -x; cd /gollum-galore && \
      (if [ "${POTENTIAL_TAG}" != "undefined" ]; then echo "${POTENTIAL_TAG} (${COMMIT})"; \
       else echo "${COMMIT}"; fi) > /dist/app/version
 
-# Build gollum galore
-FROM ruby:2.6.1-alpine3.9
 
-# - Sources:
-#   - https://pkgs.alpinelinux.org/packages?name=git&branch=v3.9
-# - GOLLUM_PARAMS. Additional gollom config: See https://github.com/gollum/gollum#configuration
-#    e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
-# - CADDY_PARAMS e.g '-conf /gollum/config/Caddyfile', in addition to -v /FOLDER/ON/HOST:/gollum/config
-# We could use ARG here, but it seems impossible to compress multiple ARGs into one layer
-ENV GOLLUM_VERSION=4.1.4 \
-  GIT_VERSION=2.20.1-r0 \
-  ALPINE_SDK_VERSION=1.0-r0 \
-  ICU_DEV_VERSION=62.1-r0 \
-  GOLLUM_PARAMS='' \
-  CADDY_PARAMS='' \
-  HOST=':80'
+FROM gollum-ruby
 
 ARG VCS_REF
 ARG SOURCE_REPOSITORY_URL
 ARG GIT_TAG
 ARG BUILD_DATE
+# - Sources:
+#   - https://pkgs.alpinelinux.org/packages?name=git&branch=v3.9
+ARG GIT_VERSION=2.20.1-r0
+
 # See https://github.com/opencontainers/image-spec/blob/master/annotations.md
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.authors="schnatterer" \
@@ -72,21 +86,25 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.title="gollum-galore" \
       org.opencontainers.image.description="🍬 Gollum wiki with lots of sugar 🍬"
-      
-COPY --from=caddybuild --chown=1000:1000 /dist /
+
+# - GOLLUM_PARAMS. Additional gollom config: See https://github.com/gollum/gollum#configuration
+#    e.g '--config /config/gollum.ru', in addition to -v /FOLDER/ON/HOST:/gollum/config
+# - CADDY_PARAMS e.g '-conf /gollum/config/Caddyfile', in addition to -v /FOLDER/ON/HOST:/gollum/config
+ENV GOLLUM_PARAMS='' \
+  CADDY_PARAMS='' \
+  HOST=':80'
+
+COPY --from=gollum-build --chown=1000:1000 /dist /
+
 RUN \
-  set -x && \
-  apk --update add \
-  # Need for gem install TODO possible to move to build stage?
-  alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION \
+  set -x  \
   # Needed for running gollum
-  git=$GIT_VERSION \
-  # Install gollum
-  && gem install gollum -v $GOLLUM_VERSION \
+  && apk --update add git=$GIT_VERSION \
+  # Needed for setcap
+  libcap=2.26-r0 \
   # cleanup apk cache
   && rm -rf /var/cache/apk/* \
   # Initialize wiki data.
-  # Can be made persistent via -v /FOLDER/ON/HOST:/gollum/wikidata.
   && mkdir -p /gollum/wiki && mkdir -p /gollum/config \
   # Create caddyfile that can be mounted when running
   && touch /gollum/config/Caddyfile \
@@ -112,4 +130,4 @@ EXPOSE 443
 # Don't Expose gollum port 4567!
 
 # Start caddy and gollum
-CMD /startup.sh
+CMD ["/startup.sh"]
