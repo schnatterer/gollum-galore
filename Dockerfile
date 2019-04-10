@@ -42,8 +42,6 @@ RUN set -x; cd /gollum-galore && \
 # Build gollum galore
 FROM ruby:2.6.1-alpine3.9
 
-MAINTAINER Johannes Schnatterer <johannes@schnatterer.info>
-
 # - Sources:
 #   - https://pkgs.alpinelinux.org/packages?name=git&branch=v3.9
 # - GOLLUM_PARAMS. Additional gollom config: See https://github.com/gollum/gollum#configuration
@@ -58,12 +56,28 @@ ENV GOLLUM_VERSION=4.1.4 \
   CADDY_PARAMS='' \
   HOST=':80'
 
+ARG VCS_REF
+ARG SOURCE_REPOSITORY_URL
+ARG GIT_TAG
+ARG BUILD_DATE
+# See https://github.com/opencontainers/image-spec/blob/master/annotations.md
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.authors="schnatterer" \
+      org.opencontainers.image.url="https://hub.docker.com/r/schnatterer/gollum-galore/" \
+      org.opencontainers.image.documentation="https://hub.docker.com/r/schnatterer/gollum-galore/" \
+      org.opencontainers.image.source="${SOURCE_REPOSITORY_URL}" \
+      org.opencontainers.image.version="${GIT_TAG}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.vendor="schnatterer" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.title="gollum-galore" \
+      org.opencontainers.image.description="🍬 Gollum wiki with lots of sugar 🍬"
+      
 COPY --from=caddybuild --chown=1000:1000 /dist /
-
 RUN \
   set -x && \
   apk --update add \
-  # Need for gem install TODO move to docker.build?
+  # Need for gem install TODO possible to move to build stage?
   alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION \
   # Needed for running gollum
   git=$GIT_VERSION \

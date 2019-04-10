@@ -1,0 +1,16 @@
+#!/bin/bash
+# -o nounset because some values are magically set by docker cloud build
+set -o errexit -o pipefail
+
+POTENTIAL_TAG=$(git name-rev --name-only --tags HEAD)
+if [ "${POTENTIAL_TAG}" != "undefined" ]; then
+    GIT_TAG="${POTENTIAL_TAG}"
+fi
+
+docker image build \
+    --build-arg VCS_REF="${GIT_SHA1}" \
+    --build-arg SOURCE_REPOSITORY_URL="${SOURCE_REPOSITORY_URL}" \
+    --build-arg GIT_TAG="${GIT_TAG}" \
+    --build-arg BUILD_DATE="$(date --rfc-3339 ns)" \
+    --tag ${IMAGE_NAME} \
+    .

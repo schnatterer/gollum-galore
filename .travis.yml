@@ -2,7 +2,7 @@ services:
   - docker
 
 before_install:
-  - docker build --no-cache -t gollum-galore .
+  - IMAGE_NAME=gollum-galore hooks/build
   # Don't deamonize, because we want to see the logs
   - docker run --rm --name gollum-galore -p 8080:80  -e GOLLUM_PARAMS="--allow-uploads --live-preview" -e CADDY_PARAMS="-conf /gollum/config/Caddyfile" -v $(pwd)/test/Caddyfile:/gollum/config/Caddyfile gollum-galore&
   # Wait for gollum-galore to startup
