@@ -1,31 +1,33 @@
 # Build caddy from source, because binaries are published under a commercial license: https://caddyserver.com/pricing
-FROM golang:1.12.0 as caddybuild
+# Starting with 1.0.0 we seem to no longer have to do this:  https://github.com/mholt/caddy/releases/tag/v1.0.0
+# OTOH - with explicit plugin versions the build remains more deterministic than downloading the "latest" plugins via https://caddyserver.com/download
+FROM golang:1.12.4 as caddybuild
 
-ARG CADDY_VERSION="v0.11.5"
+# https://github.com/mholt/caddy/releases
+ARG CADDY_VERSION="v1.0.0"
+# https://github.com/BTBurke/caddy-jwt/releases
 ARG CADDY_JWT_VERSION="v3.7.0"
+# https://github.com/tarent/loginsrv/releases
 ARG LOGINSRV_VERSION="v1.3.0"
 
-RUN git clone https://github.com/mholt/caddy /go/src/github.com/mholt/caddy
-WORKDIR  /go/src/github.com/mholt/caddy
-RUN git checkout tags/"$CADDY_VERSION" -b "$CADDY_VERSION"
-# Include Plugins http.login and http.jwt
-RUN sed -ie 's/\/\/ This is where other plugins get plugged in (imported)/_ "github.com\/BTBurke\/caddy-jwt"\n        _ "github.com\/tarent\/loginsrv\/caddy"/' \
-   /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
-# Disable telemtry
-RUN sed -ie 's/var EnableTelemetry = true/var EnableTelemetry = false/' /go/src/github.com/mholt/caddy/caddy/caddymain/run.go
-# Needed for "caddy -version" to return something useful
-RUN go get -d -v github.com/caddyserver/builds
-WORKDIR /go/src/github.com/mholt/caddy/caddy
-# Resolve all dependencies
-RUN go get ./...
+ENV GO111MODULE=on
+RUN mkdir -p /caddy
+WORKDIR /caddy
+RUN go mod init caddy
+RUN go get -v github.com/mholt/caddy@$CADDY_VERSION
+
+# Declares plugins and disables telemetry
+ADD caddy.go .
+
 # Check out deterministic versions of plugins that are tested to work with each other
-RUN cd $GOPATH/src/github.com/BTBurke/caddy-jwt && git checkout tags/"$CADDY_JWT_VERSION" -b "$CADDY_JWT_VERSION"
-RUN cd $GOPATH/src/github.com/tarent/loginsrv/caddy && git checkout tags/"$LOGINSRV_VERSION" -b "$LOGINSRV_VERSION"
-RUN go run build.go
+RUN go get -v github.com/BTBurke/caddy-jwt@$CADDY_JWT_VERSION
+RUN go get -v github.com/tarent/loginsrv/caddy@$LOGINSRV_VERSION
+
+RUN CGO_ENABLED=0 go build -o caddy
 
 # Prepare file structure for final image
 RUN mkdir -p /dist/app && mkdir -p /dist/usr/local/bin
-RUN cp /go/src/github.com/mholt/caddy/caddy/caddy /dist/usr/local/bin/
+RUN cp caddy /dist/usr/local/bin/
 
 
 # Declare common ruby base image for all ruby-stages
