@@ -21,7 +21,9 @@ services:
         source: ./config
         target: /gollum/config
         read_only: true
-
+      # Make writable - needed for file uploads
+      - type: tmpfs
+        target: /tmp
 networks:
   gollum_galore:
     external: false
