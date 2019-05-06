@@ -100,6 +100,9 @@ ENV GOLLUM_PARAMS='' \
 
 COPY --from=gollum-build --chown=1000:1000 /dist /
 
+# Make sure /tmp is always writable, even in read-only containers.
+VOLUME /tmp
+
 RUN \
   set -x  \
   # Needed for running gollum
@@ -122,7 +125,10 @@ RUN \
   && addgroup -g 1000 gollum && adduser -u 1000 -G gollum -s /bin/sh -D gollum \
   && chown -R gollum:gollum /app \
   && chown -R gollum:gollum /gollum \
-  && chown gollum:gollum /startup.sh
+  && chown gollum:gollum /startup.sh \
+  # Avoid "ArgumentError: Could not find a temporary directory" by ruby when uploading files
+  && chown gollum:gollum /tmp \
+  && chmod 700 /tmp
 
 VOLUME /gollum/wiki
 
