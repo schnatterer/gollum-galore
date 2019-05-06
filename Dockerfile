@@ -46,6 +46,8 @@ COPY --from=caddybuild --chown=1000:1000 /dist /dist
 RUN apk add  alpine-sdk=$ALPINE_SDK_VERSION icu-dev=$ICU_DEV_VERSION
 # Install gollum
 RUN gem install gollum -v $GOLLUM_VERSION
+# Install proper markdown support (e.g. for tables, see https://github.com/gollum/gollum/issues/907)
+RUN gem install github-markdown
 RUN mv /usr/local/bundle /dist/usr/local/bundle
 
 # Copy necessary libraries native extensions of ruby gems
