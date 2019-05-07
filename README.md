@@ -4,11 +4,38 @@
 
 🍬 [Gollum wiki](https://github.com/gollum) with lots of sugar. 🍬
 
-HTTPS/TLS, HTTP2, gzip, HTTP basic, JWT, [etc](https://caddyserver.com/docs).
+PlantUML, HTTPS/TLS, HTTP2, gzip, HTTP basic, JWT, [etc](https://caddyserver.com/docs).
 
 Inspired by [suttang/gollum](https://github.com/suttang/docker-gollum), enriched with sugar provided by the [caddy server](https://caddyserver.com/features).
 
 If you're interested in git-based wikis, also have a look at [smeagol-galore](https://github.com/schnatterer/smeagol-galore), which is much faster than gollum, has a modern WYSIWYG interface, including [PlantUML](http://plantuml.com/) and includes [SCM-Manager](https://www.scm-manager.org/) to provide direct access to your Git repos.
+
+# Table of contents
+<!-- Update with `doctoc --notitle README.md`. See https://github.com/thlorenz/doctoc -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Getting to it](#getting-to-it)
+  - [Super simple setup](#super-simple-setup)
+  - [Basic Auth](#basic-auth)
+  - [JWT](#jwt)
+  - [HTTPS](#https)
+    - [Self signed](#self-signed)
+  - [Behind a HTTP proxy](#behind-a-http-proxy)
+  - [Custom Gollum or Caddy config](#custom-gollum-or-caddy-config)
+  - [PlantUML](#plantuml)
+- [Running on Kubernetes (Openshift)](#running-on-kubernetes-openshift)
+  - [Simple setup](#simple-setup)
+  - [HTTPS (Custom Domain)](#https-custom-domain)
+  - [Credentials](#credentials)
+- [Architecture decisions](#architecture-decisions)
+  - [Why Caddy?](#why-caddy)
+  - [Why two processes in one Container?](#why-two-processes-in-one-container)
+- [Development](#development)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # Getting to it
 
@@ -95,6 +122,21 @@ tls self_signed
 
 See [examples/behind-http-proxy](examples/behind-http-proxy/README.md).  
 Also contains a [`docker-compose.yaml`](examples/behind-http-proxy/docker-compose.yaml) showcase.
+
+## Custom Gollum or Caddy config
+
+You can set the `GOLLUM_PARAMS` or `CADDY_PARAMS` env vars.
+
+Note that by default the `GOLLUM_PARAMS` `--config /app/config.rb` (see [config.rb](config.rb)) is set to enable default 
+PlantUML rendering. If you want to keep this behavior but set customs `GOLLUM_PARAMS`, make sure to add the default.
+
+## PlantUML
+
+By default, [PlantUML](http://plantuml.com/) Syntax (in between `@startuml` and `@enduml`) is rendered via the 
+`http://www.plantuml.com/` renderer. If you want to customize this behavior, insert your own [/app/config.rb](config.rb).
+
+If you want to disable this completely, just set env var `GOLLUM_PARAMS` without `--config /app/config.rb` (for example
+to an empty value).
 
 # Running on Kubernetes (Openshift)
 

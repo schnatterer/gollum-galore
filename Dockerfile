@@ -59,6 +59,7 @@ RUN cp /usr/lib/libicudata.so* /dist/usr/lib/
 # As we need to start two processes, copy a startup script that starts only one process in the foreground  :-/
 COPY startup.sh /dist/startup.sh
 COPY Caddyfile /dist/app/
+COPY config.rb /dist/app/
 # Write gollum galores version number
 COPY .git /gollum-galore/.git
 RUN set -x; cd /gollum-galore && \

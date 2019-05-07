@@ -6,3 +6,4 @@
 # The version is is discoverd from git during the docker build
 !.git
 !caddy.go
+!config.rb
