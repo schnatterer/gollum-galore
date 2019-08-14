@@ -73,13 +73,12 @@ import /app/Caddyfile
 
 jwt {
     path /
-    redirect /login
+    redirect /login?backTo={rewrite_uri}
     allow sub demo
     allow sub bob
 }
 
 login {
-    success_url /
     htpasswd file=/gollum/config/passwords
     simple bob=secret,alice=secret
 }

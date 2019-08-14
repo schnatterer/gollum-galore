@@ -12,12 +12,11 @@
 
   jwt {
     path /
-    redirect /login
+    redirect /login?backTo={rewrite_uri}
     allow sub demo
   }
 
   login {
-    success-url /
     jwt-expiry 720h
     htpasswd file=/gollum/config/.htpasswd
     # See https://github.com/tarent/loginsrv/blob/master/README.md#configuration-and-startup
