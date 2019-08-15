@@ -4,17 +4,17 @@
 FROM golang:1.12.4 as caddybuild
 
 # https://github.com/mholt/caddy/releases
-ARG CADDY_VERSION="v1.0.0"
+ARG CADDY_VERSION="v1.0.3"
 # https://github.com/BTBurke/caddy-jwt/releases
-ARG CADDY_JWT_VERSION="v3.7.0"
+ARG CADDY_JWT_VERSION="v3.7.2"
 # https://github.com/tarent/loginsrv/releases
-ARG LOGINSRV_VERSION="v1.3.0"
+ARG LOGINSRV_VERSION="v1.3.1"
 
 ENV GO111MODULE=on
 RUN mkdir -p /caddy
 WORKDIR /caddy
 RUN go mod init caddy
-RUN go get -v github.com/mholt/caddy@$CADDY_VERSION
+RUN go get -v github.com/caddyserver/caddy@$CADDY_VERSION
 
 # Declares plugins and disables telemetry
 ADD caddy.go .
@@ -23,7 +23,7 @@ ADD caddy.go .
 RUN go get -v github.com/BTBurke/caddy-jwt@$CADDY_JWT_VERSION
 RUN go get -v github.com/tarent/loginsrv/caddy@$LOGINSRV_VERSION
 
-RUN CGO_ENABLED=0 go build -o caddy
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o caddy
 
 # Prepare file structure for final image
 RUN mkdir -p /dist/app && mkdir -p /dist/usr/local/bin
